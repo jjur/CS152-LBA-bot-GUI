@@ -35,7 +35,7 @@ class botframe ( wx.Frame ):
         bSizer2.Add( self.chat_window, 1, wx.ALL|wx.EXPAND, 5 )
 
         listbox_optionsChoices = []
-        self.listbox_options = wx.CheckListBox( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, listbox_optionsChoices, 0 )
+        self.listbox_options = wx.CheckListBox( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, listbox_optionsChoices, wx.LB_SINGLE )
         bSizer2.Add( self.listbox_options, 0, wx.ALL|wx.EXPAND, 5 )
 
         self.edit_number = wx.SpinCtrl( self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 9999, 500 )
