@@ -34,17 +34,23 @@ class botframe ( wx.Frame ):
         self.chat_window = wx.TextCtrl( self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY )
         bSizer2.Add( self.chat_window, 1, wx.ALL|wx.EXPAND, 5 )
 
+        bSizer3 = wx.BoxSizer( wx.HORIZONTAL )
+
         listbox_optionsChoices = []
-        self.listbox_options = wx.CheckListBox( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, listbox_optionsChoices, wx.LB_SINGLE )
-        bSizer2.Add( self.listbox_options, 0, wx.ALL|wx.EXPAND, 5 )
+        self.listbox_options = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, listbox_optionsChoices, 0 )
+        self.listbox_options.SetSelection( 0 )
+        bSizer3.Add( self.listbox_options, 1, wx.ALL, 5 )
 
         self.edit_number = wx.SpinCtrl( self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 9999, 500 )
         self.edit_number.Hide()
 
-        bSizer2.Add( self.edit_number, 0, wx.ALL|wx.EXPAND, 5 )
+        bSizer3.Add( self.edit_number, 1, wx.ALL, 5 )
 
         self.btn_send = wx.Button( self.m_panel1, wx.ID_ANY, u"Send >>>", wx.DefaultPosition, wx.DefaultSize, 0 )
-        bSizer2.Add( self.btn_send, 0, wx.ALL|wx.EXPAND, 5 )
+        bSizer3.Add( self.btn_send, 0, wx.ALL|wx.EXPAND, 5 )
+
+
+        bSizer2.Add( bSizer3, 0, wx.EXPAND, 5 )
 
 
         self.m_panel1.SetSizer( bSizer2 )

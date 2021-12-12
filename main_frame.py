@@ -19,14 +19,24 @@ def list_to_dict(lst):
 class MainFrame(frame.botframe):
     def __init__(self):
         frame.botframe.__init__(self, None)
-        self.calories = None
-        self.diet = None
+
+        # Start with a welcome message
         self.chat_window.AppendText("BOT: Hello, I am FoodBot! I will help you to find your next recipe.\n")
 
+        # Download json with receipes data and initialize Prolog KB
         self.recipes = self.download_recipes()
-
         self.prolog = self.initialize_prolog()
 
+        # Placeholder for user choices
+        self.cu = None
+        self.ing = None
+        self.effort = None
+        self.course = None
+        self.goal = None
+        self.calories = None
+        self.diet = None
+
+        # Ask first Question
         self.current_question = 0
         self.prepare_question()
 
@@ -113,22 +123,27 @@ class MainFrame(frame.botframe):
     def prepare_question(self):
         self.current_question += 1
 
+        # IF Q1
         if self.current_question == 1:
             diets = []
 
+            # Get all responses from Prolog
             for soln in self.prolog.query("diet(R,D)"):
                 if "_" not in str(soln["D"]):
                     diets.append(str(soln["D"]))
 
             diets_dict, diets_lst = list_to_dict(diets)
             self.chat_window.AppendText("BOT: Do you have any dietary preferences?\n")
+            # Update option in SelectBox
             self.listbox_options.Set(diets_lst)
 
+        # IF Q2
         elif self.current_question == 2:
             choices = ["Weight-Loss", "Weight-Gain", "Nutrition", "Pleasure"]
             self.chat_window.AppendText("BOT: What is your dietary goal?\n")
             self.listbox_options.Set(choices)
         elif self.current_question == 3:
+            # Show this question only if "Weight-Loss" or "Weight-Gain", else skip
             if "Weight-Loss" in self.goal_choices or "Weight-Gain" in self.goal_choices:
                 self.chat_window.AppendText("BOT: What are your target calories?\n")
                 self.edit_number.Show()
@@ -136,12 +151,16 @@ class MainFrame(frame.botframe):
                 self.listbox_options.GetParent().Layout()
             else:
                 self.prepare_question()
+
+        # Q4
         elif self.current_question == 4:
             self.chat_window.AppendText("BOT: How many minutes do you have to make the food?\n")
             self.edit_number.SetValue(30)
             self.edit_number.Show()
             self.listbox_options.Hide()
             self.listbox_options.GetParent().Layout()
+
+        # Q5
         elif self.current_question == 5:
             effort = []
             for soln in self.prolog.query(
@@ -151,6 +170,8 @@ class MainFrame(frame.botframe):
             effort_dict, effort_lst = list_to_dict(effort)
             self.chat_window.AppendText("BOT: How much effort do you want to put in?\n")
             self.listbox_options.Set(effort_lst)
+
+        # Q6
         elif self.current_question == 6:
             course = []
             for soln in self.prolog.query(
@@ -160,6 +181,8 @@ class MainFrame(frame.botframe):
             effort_dict, effort_lst = list_to_dict(course)
             self.chat_window.AppendText("BOT: What course would you like?\n")
             self.listbox_options.Set(effort_lst)
+
+        # Q7
         elif self.current_question == 7:
             ing = []
 
@@ -171,6 +194,8 @@ class MainFrame(frame.botframe):
             ing_dict, ing_lst = list_to_dict(ing)
             self.chat_window.AppendText("BOT: Which of these remaining ingredients would you like to be in your meal?\n")
             self.listbox_options.Set(ing_lst)
+
+        # Q8
         elif self.current_question == 8:
             cuisine = []
 
@@ -182,12 +207,28 @@ class MainFrame(frame.botframe):
             cuisine_dict, cuisine_lst = list_to_dict(cuisine)
             self.chat_window.AppendText("BOT: What cuisine do you want?\n")
             self.listbox_options.Set(cuisine_lst)
+
+        # Time to make a final decission
         elif self.current_question == 9:
             self.make_decission()
 
 
-    def btn_sendOnButtonClick( self, event ):
-        selected = self.listbox_options.GetCheckedStrings()
+        if self.listbox_options.GetCount() ==0:
+            self.chat_window.AppendText("BOT: Unfortunately, we haven´t found any available receipe for you. Please try again with different answers.\n")
+
+        # If there is only one option available, select it automatically
+        if self.listbox_options.GetCount() == 1:
+            self.btn_sendOnButtonClick(None,0)
+
+
+    def btn_sendOnButtonClick( self, event, selected=None):
+        """
+        Evaluate selected answer and send it to Prolog
+        """
+        if selected is not None:
+            self.listbox_options.SetSelection(selected)
+        selected = self.listbox_options.GetStringSelection()
+        selected = [selected]
         if len(selected)==0 and self.current_question not in [3]:
             wx.MessageBox("Please select at least one option.","No Option Selected", wx.ICON_INFORMATION)
             return False
@@ -237,19 +278,17 @@ class MainFrame(frame.botframe):
                 self.chat_window.AppendText("YOU: " + ", ".join(selected)+ "\n")
                 self.ing = choice
             elif self.current_question == 8:
-                for choice in selected:
-                    pass
-                #    self.prolog.assertz(f"effort('{choice}')")
-                self.chat_window.AppendText("YOU: " + ", ".join(selected)+ "\n")
-                self.cu = choice
+                self.chat_window.AppendText("YOU: " + ", ".join(selected[0])+ "\n")
+                self.cu = selected[0]
 
 
 
-
+        # Update the layout of the app. Usefull when we changed the size of the app or show/hiden some elements
         self.listbox_options.GetParent().Layout()
         self.prepare_question()
 
     def make_decission(self):
+        """Make final Prolog query to find the receipes"""
         final_recipes = []
         for soln in self.prolog.query(
                 f"recipe2(R,'{self.diet}',{self.calories},{self.time},'{self.effort}','{self.course}','{self.ing}', '{self.cu}')"):
@@ -257,6 +296,8 @@ class MainFrame(frame.botframe):
                 final_recipes.append(soln["R"])
 
         final_recipes_dict, final_recipes_lst = list_to_dict(final_recipes)
+
+        # Show the results
         self.chat_window.AppendText("BOT: Nice, I found something for you 😀. The following recipes from BBC's Good Foods website match your needs:\n")
         for receipe in final_recipes_lst:
             self.chat_window.AppendText(receipe.replace("&amp;","&") + "\n")
